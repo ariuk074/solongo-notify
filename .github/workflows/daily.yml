@@ -1,11 +1,17 @@
 name: Өдрийн үгийн мэдэгдэл
 on:
   schedule:
-    - cron: "5 * * * *"
+    # GitHub хуваарийг олонтаа алгасдаг тул цаг тутам оролдоно; нэг удаа ажиллахад л
+    # ирэх 24 цагийн мэдэгдэл товлогдоно (send.mjs-ийг үз).
+    - cron: "23 * * * *"
   workflow_dispatch: {}
+concurrency:
+  group: daily-notify
+  cancel-in-progress: false
 jobs:
   send:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
