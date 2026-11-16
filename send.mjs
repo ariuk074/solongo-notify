@@ -38,19 +38,22 @@ function dayNumber(t) {
 // ----- 1. Өөрийн Web Push (OneSignal-гүй шинэ систем) -----
 // Бүртгэл, түлхүүр, илгээлт бүгд Cloudflare дээр (solongo-dict/functions/api/push). Энд зөвхөн "одоо илгээ" гэж түлхэнэ.
 // Нэг дуудлагад 40 хүртэл мэдэгдэл явдаг тул дуустал давтана. Давхар дуудсан ч давхардахгүй.
-const PUSH_API = (process.env.PUSH_API || "https://solongo-test.pages.dev").replace(/\/$/, "");
+// Хоёр сервер: үндсэн апп (solongo-api) ба туршилтын сайт (solongo-test). Тус бүр өөрийн бүртгэлтэй тул хоёуланг нь түлхэнэ.
+const PUSH_APIS = (process.env.PUSH_API || "https://solongo-api.pages.dev,https://solongo-test.pages.dev").split(",").map((u) => u.trim().replace(/\/$/, "")).filter(Boolean);
 if (!DRY) {
-  let total = 0;
-  try {
-    for (let i = 0; i < 60; i++) {
-      const r = await fetch(`${PUSH_API}/api/push/run`, { method: "POST" });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) { console.log(`Өөрийн push: ${r.status} ${JSON.stringify(j)}`); break; }
-      total += j.sent || 0;
-      if (!j.remaining) break;
-    }
-    console.log(`Өөрийн push: ${total} мэдэгдэл илгээв`);
-  } catch (e) { console.log(`Өөрийн push: алдаа ${e.message}`); }
+  for (const api of PUSH_APIS) {
+    let total = 0;
+    try {
+      for (let i = 0; i < 60; i++) {
+        const r = await fetch(`${api}/api/push/run`, { method: "POST" });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) { console.log(`Өөрийн push (${api}): ${r.status} ${JSON.stringify(j)}`); break; }
+        total += j.sent || 0;
+        if (!j.remaining) break;
+      }
+      console.log(`Өөрийн push (${api}): ${total} мэдэгдэл илгээв`);
+    } catch (e) { console.log(`Өөрийн push (${api}): алдаа ${e.message}`); }
+  }
 }
 
 // ----- 2. OneSignal (шилжилтийн хугацаанд хуучин бүртгэлтэй хэрэглэгчдэд) -----

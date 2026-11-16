@@ -2,15 +2,20 @@
 // GitHub Actions-ийн хуваарь найдваргүй (хэдэн цагаар хоцордог) тул үүнийг Cloudflare дээр тавина.
 // Тохируулах: Cloudflare → Workers & Pages → Create → Worker → энэ кодыг буулгаад Deploy →
 //             Settings → Triggers → Cron Triggers → "0 * * * *" (цаг тутам) нэмнэ.
-const API = "https://solongo-test.pages.dev/api/push/run";
+// Үндсэн апп ба туршилтын сайт тус тусын сервертэй тул хоёуланг нь түлхэнэ.
+const APIS = ["https://solongo-api.pages.dev/api/push/run", "https://solongo-test.pages.dev/api/push/run"];
 
 async function run() {
   let sent = 0;
-  for (let i = 0; i < 40; i++) {
-    const r = await fetch(API, { method: "POST" });
-    const j = await r.json().catch(() => ({}));
-    sent += j.sent || 0;
-    if (!r.ok || !j.remaining) break;
+  for (const api of APIS) {
+    try {
+      for (let i = 0; i < 40; i++) {
+        const r = await fetch(api, { method: "POST" });
+        const j = await r.json().catch(() => ({}));
+        sent += j.sent || 0;
+        if (!r.ok || !j.remaining) break;
+      }
+    } catch (e) {}
   }
   return { sent };
 }
